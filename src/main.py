@@ -64,7 +64,7 @@ def display_inferior(df):
     if inferior_df.empty:
         print("No worse benchmark result")
     else:
-        print(inferior_df)
+        print(f"\033[91m{inferior_df}\033[0m")
         
 
 
