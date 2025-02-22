@@ -37,18 +37,18 @@ def display_results(results):
 
 
 
-def compare_benchmarks(df1, df2, threshold=0.08):
+def compare_benchmarks(df1, df2, threshold=0.05):
     merged_df = df1.merge(df2, on="name", suffixes=("_old", "_new"))
     merged_df["absolute_difference"] = merged_df['cpu_time_new'] - merged_df['cpu_time_old']
     merged_df["relative_difference"] = merged_df["absolute_difference"] / merged_df["cpu_time_old"]
 
     def categorize(diff):
         if diff < -threshold :
-            return "Superior"
+            return "superior"
         elif diff > threshold :
-            return "Inferior"
+            return "inferior"
         else:
-            return "Equal"
+            return "equal"
 
     merged_df["comparison"] = merged_df["relative_difference"].apply(categorize)
     return merged_df
@@ -58,6 +58,14 @@ def display_comparison(df):
     summary = df["comparison"].value_counts().to_dict()
     for category, count in summary.items():
         print(f"{category}: {count}")
+
+def display_inferior(df):
+    inferior_df = df[df["comparison"] == "inferior"]
+    if inferior_df.empty:
+        print("No worse benchmark result")
+    else:
+        print(inferior_df)
+        
 
 
 def main():
@@ -76,6 +84,8 @@ def main():
     comparison_df = compare_benchmarks(df1, df2)
 
     display_comparison(comparison_df)
+
+    display_inferior(comparison_df)
 
 if __name__ == "__main__":
     main()
