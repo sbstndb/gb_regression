@@ -3,6 +3,8 @@ import sys
 import pandas as pd
 import tabulate
 
+import termplotlib as tpl
+
 
 def load_json(filename):
     try:
@@ -66,7 +68,11 @@ def display_inferior(df):
     else:
         print(f"\033[91m{inferior_df}\033[0m")
         
-
+def display_bar(df):
+    fig = tpl.figure()
+    summary = df["comparison"].value_counts().to_dict()
+    fig.barh(list(summary.values()), list(summary.keys()))
+    fig.show()
 
 def main():
     if len(sys.argv) != 3:
@@ -83,9 +89,10 @@ def main():
 
     comparison_df = compare_benchmarks(df1, df2)
 
-    display_comparison(comparison_df)
+#    display_comparison(comparison_df)
 
     display_inferior(comparison_df)
+    display_bar(comparison_df)
 
 if __name__ == "__main__":
     main()
