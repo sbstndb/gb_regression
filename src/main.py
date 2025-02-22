@@ -7,7 +7,7 @@ import termplotlib as tpl
 
 import matplotlib.pyplot as plt
 
-
+import numpy as np 
 import plotext as plt2
 
 def load_json(filename):
@@ -63,6 +63,16 @@ def compare_benchmarks(df1, df2, threshold=0.05):
     merged_df["comparison"] = merged_df["relative_difference"].apply(categorize)
     return merged_df
 
+
+
+def mean_2D(df, benchmark_name):
+    result = df[df["benchmark_name_new"] == benchmark_name]
+    difference = (result["cpu_time_old"]-result["cpu_time_new"])/result["cpu_time_old"]
+    mean = np.mean(difference)
+    return mean
+
+
+
 def display_comparison(df):
     print("Benchmark Comparison : ")
     summary = df["comparison"].value_counts().to_dict()
@@ -84,30 +94,17 @@ def display_bar(df):
 
 
 
-#def display_plot(df1, df2, name):
-#    result1 = df1[df1["benchmark_name"] == name]
-#    result2 = df2[df2["benchmark_name"] == name]
-#    
-#    plt.plot(result1["cpu_time"], label="df1")
-#    plt.plot(result2["cpu_time"], label="df2")
-#    
-#    plt.title(f"Benchmark  {name}")
-#    plt.yscale('log')
-#    plt.xscale('log')
-#    plt.xlabel("Size")
-#    plt.ylabel("Time")
-#    plt.legend()
-#    plt.grid()
-#    plt.show()
-
-
 def display_plot_terminal(comparison_df, name):
     result = comparison_df[comparison_df["benchmark_name_new"] == name]
+    print(f"\033[1;4mTestcase : {name}\033[0m")
+
+    linex = [min(result["size_new"]), max(result["size_new"])]
 
     plt2.clf()
 
-    plt2.subplots(1,2).title("Comparison")
-    plt2.subplot(1,1).plotsize(plt2.tw()//4, plt2.th()//4)
+    plt2.subplots(1,2)#
+#    plt2.subplot(1,1).title("Comparison")
+    plt2.subplot(1,1).plotsize(plt2.tw()//2, plt2.th()//4)
     plt2.subplot(1,1).theme('pro')
     plt2.subplot(1,1).xscale('log')
     plt2.subplot(1,1).yscale('log')
@@ -115,14 +112,17 @@ def display_plot_terminal(comparison_df, name):
     plt2.subplot(1,1).ylabel('Time')
     plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_old"], label="old")
     plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_new"], label="new")
-    plt2.subplot(1,1).title(f"Benchmark  {name}")
+#    plt2.subplot(1,1).title(f"Benchmark  {name}")
     plt2.subplot(1,1).yscale('log')
     plt2.subplot(1,1).xscale('log')
     plt2.subplot(1,1).xlabel("Size")
     plt2.subplot(1,1).ylabel("Time")
 
-    plt2.subplot(1,2).title("difference")
+#    plt2.subplot(1,2).title("difference")
+    plt2.subplot(1,2).plot(linex, [0.0,0.0], label='reference')
     plt2.subplot(1,2).plot(result["size_new"], (result["cpu_time_old"]-result["cpu_time_new"])/result["cpu_time_old"], label="difference")
+             
+    plt2.subplot(1,2).plotsize(plt2.tw()//2, plt2.th()//4)
     plt2.subplot(1,2).theme('pro')
     plt2.subplot(1,2).xscale('log')
     plt2.subplot(1,2).theme("pro")
@@ -143,6 +143,9 @@ def get_2D_benchmarks(df, threshold=2):
 def print_all_plots(df):
     above_threshold = get_2D_benchmarks(df, 2)
     for benchmark in above_threshold : 
+
+        mean = mean_2D(df, benchmark)
+        print(f"Average gain : {mean:.3f}")
         display_plot_terminal(df, benchmark)
 
 
