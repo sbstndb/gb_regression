@@ -5,6 +5,10 @@ import tabulate
 
 import termplotlib as tpl
 
+import matplotlib.pyplot as plt
+
+
+import plotext as plt2
 
 def load_json(filename):
     try:
@@ -34,10 +38,14 @@ def parse_benchmark(json_data):
 
     return pd.DataFrame(results)
 
+def extract_size(df):
+    size_pattern = r'[/<](\d+)(?:>)?$'
+    df["size"] = df["name"].str.extract(size_pattern)
+    df["benchmark_name"] = df["name"].str.replace(size_pattern, '', regex=True)
+
+
 def display_results(results):
     print(results)
-
-
 
 def compare_benchmarks(df1, df2, threshold=0.05):
     merged_df = df1.merge(df2, on="name", suffixes=("_old", "_new"))
@@ -74,6 +82,42 @@ def display_bar(df):
     fig.barh(list(summary.values()), list(summary.keys()))
     fig.show()
 
+
+def display_plot(df1, df2, name):
+    result1 = df1[df1["benchmark_name"] == name]
+    result2 = df2[df2["benchmark_name"] == name]
+    
+    plt.plot(result1["cpu_time"], label="df1")
+    plt.plot(result2["cpu_time"], label="df2")
+    
+    plt.title(f"Benchmark  {name}")
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel("Size")
+    plt.ylabel("Time")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+def display_plot_terminal(df1, df2, name):
+    result1 = df1[df1["benchmark_name"] == name]
+    result2 = df2[df2["benchmark_name"] == name]
+
+    plt2.plot(result1["cpu_time"], label="df1")
+    plt2.plot(result2["cpu_time"], label="df2")
+
+    plt.title(f"Benchmark  {name}")
+    plt2.yscale('log')
+    plt2.xscale('log')
+    plt2.xlabel("Size")
+    plt2.ylabel("Time")
+#    plt.grid()
+    plt2.show()
+
+
+
+
 def main():
     if len(sys.argv) != 3:
         print("Usage : python main.py <benchmark1.json> <benchmark2.json>")
@@ -84,6 +128,9 @@ def main():
     df1 = parse_benchmark(json_data1)
     df2 = parse_benchmark(json_data2)
 
+    extract_size(df1)
+    extract_size(df2)
+
     display_results(df1)
     display_results(df2)
 
@@ -93,6 +140,11 @@ def main():
 
     display_inferior(comparison_df)
     display_bar(comparison_df)
+
+#    display_plot(df1, df2, "BLAS1_op_raw<float, std::plus< float>>")
+    display_plot_terminal(df1, df2, "BLAS1_op_raw<float, std::plus< float>>")
+
+
 
 if __name__ == "__main__":
     main()
