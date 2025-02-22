@@ -12,7 +12,6 @@ def load_json(filename):
             print(f"Error during the read of the JSON file : {e}")
             sys.exit(1)
 
-
 def parse_benchmark(json_data):
     if "benchmarks" not in json_data:
         print("This JSON file do not contain any valid Google Benchmark result...")
@@ -33,23 +32,50 @@ def parse_benchmark(json_data):
 
     return pd.DataFrame(results)
 
-
-
-
 def display_results(results):
-    print("Benchmark results : ")
-
     print(results)
 
 
+
+def compare_benchmarks(df1, df2, threshold=0.08):
+    merged_df = df1.merge(df2, on="name", suffixes=("_old", "_new"))
+    merged_df["absolute_difference"] = merged_df['cpu_time_new'] - merged_df['cpu_time_old']
+    merged_df["relative_difference"] = merged_df["absolute_difference"] / merged_df["cpu_time_old"]
+
+    def categorize(diff):
+        if diff < -threshold :
+            return "Superior"
+        elif diff > threshold :
+            return "Inferior"
+        else:
+            return "Equal"
+
+    merged_df["comparison"] = merged_df["relative_difference"].apply(categorize)
+    return merged_df
+
+def display_comparison(df):
+    print("Benchmark Comparison : ")
+    summary = df["comparison"].value_counts().to_dict()
+    for category, count in summary.items():
+        print(f"{category}: {count}")
+
+
 def main():
-    if len(sys.argv) != 2:
-        print("Usage : python main.py <benchmark.json>")
+    if len(sys.argv) != 3:
+        print("Usage : python main.py <benchmark1.json> <benchmark2.json>")
         sys.exit(1)
-    filename = sys.argv[1]
-    json_data = load_json(filename)
-    results = parse_benchmark(json_data)
-    display_results(results)
+    filename1, filename2 = sys.argv[1], sys.argv[2]
+    json_data1 = load_json(filename1)
+    json_data2 = load_json(filename2)
+    df1 = parse_benchmark(json_data1)
+    df2 = parse_benchmark(json_data2)
+
+    display_results(df1)
+    display_results(df2)
+
+    comparison_df = compare_benchmarks(df1, df2)
+
+    display_comparison(comparison_df)
 
 if __name__ == "__main__":
     main()
