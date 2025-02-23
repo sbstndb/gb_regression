@@ -73,8 +73,12 @@ def categorize(merged_df, threshold):
         else:
             return "equal"
     
-    avg_diff = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("mean")
-    merged_df["comparison"] = avg_diff.apply(categorize)
+    merged_df["relative_mean"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("mean")
+    merged_df["relative_min"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("min")
+    merged_df["relative_max"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("max")
+    merged_df["relative_deviation"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("std")
+
+    merged_df["comparison"] = merged_df["relative_mean"].apply(categorize)
 
 
 def compare_benchmarks(df1, df2, threshold=0.05):
