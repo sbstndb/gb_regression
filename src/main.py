@@ -91,17 +91,24 @@ def compare_benchmarks(df1, df2, threshold=0.05):
 
 
 def display_comparison(df):
-    print("Benchmark Comparison : ")
-    summary = df["comparison"].value_counts().to_dict()
-    for category, count in summary.items():
-        print(f"{category}: {count}")
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    ORANGE = '\033[93m'
+    RESET = '\033[0m'
+    result = df.groupby("benchmark_name_new")["comparison"].unique()
 
-def display_inferior(df):
-    inferior_df = df[df["comparison"] == "inferior"]
-    if inferior_df.empty:
-        print("No worse benchmark result")
-    else:
-        print(f"\033[91m{inferior_df}\033[0m")
+    for index, values in result.items():
+        comparison = values[0]
+        if comparison == 'inferior':
+            color = RED
+        elif comparison == 'superior':
+            color = GREEN
+        elif comparison == 'equal':
+            color = ORANGE
+        else:
+            color = RESET
+        print(f"{color}{index:<60} [{comparison}]{RESET}")        
+
         
 def display_bar(df):
     fig = tpl.figure()
@@ -183,12 +190,13 @@ def main():
     df1 = read_benchmark(filename1)
     df2 = read_benchmark(filename2)
 
-#    display_comparison(comparison_df)
 
 
     comparison_df = compare_benchmarks(df1, df2)
 
-    display_inferior(comparison_df)
+    display_comparison(comparison_df)
+
+
     display_bar(comparison_df)
 
 
