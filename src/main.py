@@ -170,8 +170,8 @@ def display_plot_terminal(comparison_df, name):
     plt2.subplot(1,1).yscale('log')
     plt2.subplot(1,1).xlabel('Size')
     plt2.subplot(1,1).ylabel('Time')
-    plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_old"], label="old")
-    plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_new"], label="new")
+    plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_old"], label="old", marker="fhd")
+    plt2.subplot(1,1).plot(result["size_new"], result["cpu_time_new"], label="new", marker="fhd")
 #    plt2.subplot(1,1).title(f"Benchmark  {name}")
     plt2.subplot(1,1).yscale('log')
     plt2.subplot(1,1).xscale('log')
@@ -179,8 +179,8 @@ def display_plot_terminal(comparison_df, name):
     plt2.subplot(1,1).ylabel("Time")
 
 #    plt2.subplot(1,2).title("difference")
-    plt2.subplot(1,2).plot(linex, [0.0,0.0], label='reference')
-    plt2.subplot(1,2).plot(result["size_new"], (result["cpu_time_new"]-result["cpu_time_old"])/result["cpu_time_old"], label="difference")
+    plt2.subplot(1,2).plot(linex, [0.0,0.0], label='reference', marker="braille")
+    plt2.subplot(1,2).plot(result["size_new"], (result["cpu_time_new"]-result["cpu_time_old"])/result["cpu_time_old"], label="difference", marker="braille")
              
     plt2.subplot(1,2).plotsize(plt2.tw()//2, plt2.th()//4)
     plt2.subplot(1,2).theme('pro')
@@ -245,7 +245,7 @@ def main():
     display_comparison(comparison_df)
 #    display_bar(comparison_df)
 
-#    print_all_plots(comparison_df)
+    print_all_plots(comparison_df)
 
 if __name__ == "__main__":
     main()
