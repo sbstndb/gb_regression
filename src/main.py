@@ -71,14 +71,16 @@ def categorize(merged_df, threshold):
         elif diff > threshold :
             return "inferior"
         else:
-            return "equal"
+            return "equal   "
     
     merged_df["relative_mean"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("mean")
     merged_df["relative_min"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("min")
     merged_df["relative_max"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("max")
     merged_df["relative_deviation"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("std")
+    merged_df["size_min"] = merged_df.groupby("benchmark_name_new")["size_new"].transform("min")
+    merged_df["size_max"] = merged_df.groupby("benchmark_name_new")["size_new"].transform("max")    
     merged_df["count_same_benchmark"] = merged_df.groupby("benchmark_name_new")["benchmark_name_new"].transform("count")
-    print(merged_df["count_same_benchmark"])
+#    print(merged_df["count_same_benchmark"])
 
 
 
@@ -103,7 +105,13 @@ def display_comparison(df):
         'relative_min': 'first',         # Suppose que 'min' existe dans le df
         'relative_max': 'first',         # Suppose que 'max' existe dans le df
         'relative_deviation': 'first',          # Suppose que 'std' existe dans le df
-        'count_same_benchmark': 'first'
+        'count_same_benchmark': 'first',
+        'size_min': 'first',        
+        'size_max': 'first',
+        'cpu_time_old': 'first',
+        'cpu_time_new': 'first',
+        'relative_difference': 'first'
+        
     })
     
 
@@ -113,16 +121,26 @@ def display_comparison(df):
         rmax = row["relative_max"]
         rdeviation = row["relative_deviation"]
         count = row["count_same_benchmark"]
+        size_min = row["size_min"]
+        size_max = row["size_max"]        
+        cpu_time_old = row["cpu_time_old"]
+        cpu_time_new = row["cpu_time_new"]
+        relative_difference = row["relative_difference"]        
         if comparison == 'inferior':
             color = RED
         elif comparison == 'superior':
             color = GREEN
-        elif comparison == 'equal':
+        elif comparison == 'equal   ':
             color = ORANGE
         else:
             color = RESET
-        print(f"{color}{index:<60} [{comparison}] "
-              f"min: {rmin:.4f} max: {rmax:.4f} std: {rdeviation:.4f} count: {count} {RESET}")
+
+        if (count == 1):
+            print(f"{color}{index:<60} [{comparison}] "
+                  f"cpu_time reference: {cpu_time_old:.4f} cpu_time: {cpu_time_new:.4f} relative difference: {relative_difference:.4f}{RESET}")
+        else:
+            print(f"{color}{index:<60} [{comparison}] "
+              f"rel_min: {rmin:.4f} rel_max: {rmax:.4f} std: {rdeviation:.4f} count: {count} size: {size_min}-{size_max}{RESET}")
 
 
         
@@ -132,8 +150,6 @@ def display_bar(df):
     summary = df_unique["comparison"].value_counts().to_dict()
     fig.barh(list(summary.values()), list(summary.keys()))
     fig.show()
-
-
 
 def display_plot_terminal(comparison_df, name):
     result = comparison_df[comparison_df["benchmark_name_new"] == name]
@@ -161,7 +177,7 @@ def display_plot_terminal(comparison_df, name):
 
 #    plt2.subplot(1,2).title("difference")
     plt2.subplot(1,2).plot(linex, [0.0,0.0], label='reference')
-    plt2.subplot(1,2).plot(result["size_new"], (result["cpu_time_old"]-result["cpu_time_new"])/result["cpu_time_old"], label="difference")
+    plt2.subplot(1,2).plot(result["size_new"], (result["cpu_time_new"]-result["cpu_time_old"])/result["cpu_time_old"], label="difference")
              
     plt2.subplot(1,2).plotsize(plt2.tw()//2, plt2.th()//4)
     plt2.subplot(1,2).theme('pro')
@@ -173,19 +189,42 @@ def display_plot_terminal(comparison_df, name):
     plt2.show()
 
 
+def display_bar_terminal(comparison_df, name):
+    result = comparison_df[comparison_df["benchmark_name_new"] == name]
+#    print("result : " , result)
+#    print("cpu_time_old : ", result["cpu_time_old"])
+#
+#    print("cpu_time_old size : ", result["cpu_time_old"].size)
+
+
+    print(f"\033[1;4mTestcase : {name}\033[0m")        
+    plt2.clf()
+#    print("timeold : ", result["cpu_time_old"])
+#    print("timenew : ", result["cpu_time_new"])
+    time_result = [result["cpu_time_old"].iloc[0], result["cpu_time_new"].iloc[0]]
+    plt2.bar(time_result) 
+    plt2.plotsize(plt2.tw()//4, plt2.th()//4)
+    plt2.show()
+
+
+
+
 def get_2D_benchmarks(df, threshold=2):
     counts = df["benchmark_name_old"].value_counts()
     above_threshold = counts[counts > threshold].index.tolist()
-    print(f"Benchmarks avec plus de {threshold} occurrences : {above_threshold}")
+    below_threshold = counts[counts <= threshold].index.tolist()    
+    print(f"Benchmarks avec moins de {threshold} occurrences : {below_threshold}")
 
-    return above_threshold
+    return above_threshold, below_threshold
 
 
 def print_all_plots(df):
-    above_threshold = get_2D_benchmarks(df, 2)
+    threshold = 1
+    above_threshold, below_threshold = get_2D_benchmarks(df, threshold)
     for benchmark in above_threshold : 
-
         display_plot_terminal(df, benchmark)
+    for benchmark in below_threshold:
+        display_bar_terminal(df, benchmark)
 
 
 def mode(m):
@@ -209,8 +248,8 @@ def main():
     display_comparison(comparison_df)
     display_bar(comparison_df)
 
-    display_plot_terminal(comparison_df, "BLAS1_op_raw<float, std::plus< float>>")
-    get_2D_benchmarks(comparison_df)
+#    display_plot_terminal(comparison_df, "BLAS1_op_raw<float, std::plus< float>>")
+#    get_2D_benchmarks(comparison_df)
     print_all_plots(comparison_df)
 
 if __name__ == "__main__":
