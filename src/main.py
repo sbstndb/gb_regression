@@ -36,7 +36,9 @@ def parse_benchmark(json_data):
             "iterations": iterations
             })
 
-    return pd.DataFrame(results)
+    df = pd.DataFrame(results)
+    extract_size(df)
+    return df
 
 def extract_size(df):
     size_pattern = r'[/<](\d+)(?:>)?$'
@@ -150,25 +152,39 @@ def print_all_plots(df):
 
 
 
+def mode(m):
+    if (m == "comparison"):
+        print("Select mode comparison")
+    elif (m == "show"):
+        print("Select mode Show")
+
+
+
+def read_benchmark(filename):
+    json_data = load_json(filename)
+    df = parse_benchmark(json_data)
+    return df
+
+
+
 def main():
     if len(sys.argv) != 3:
         print("Usage : python main.py <benchmark1.json> <benchmark2.json>")
         sys.exit(1)
+
+    # read 2 google benchbmark files
     filename1, filename2 = sys.argv[1], sys.argv[2]
-    json_data1 = load_json(filename1)
-    json_data2 = load_json(filename2)
-    df1 = parse_benchmark(json_data1)
-    df2 = parse_benchmark(json_data2)
+    df1 = read_benchmark(filename1)
+    df2 = read_benchmark(filename2)
 
-    extract_size(df1)
-    extract_size(df2)
+#    extract_size(df1)
+#    display_comparison(comparison_df)
+#    extract_size(df2)
 
-    display_results(df1)
-    display_results(df2)
+#    display_results(df1)
+#    display_results(df2)
 
     comparison_df = compare_benchmarks(df1, df2)
-
-#    display_comparison(comparison_df)
 
     display_inferior(comparison_df)
     display_bar(comparison_df)
