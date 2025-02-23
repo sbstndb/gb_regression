@@ -89,16 +89,24 @@ def compare_benchmarks(df1, df2, threshold=0.05):
     return merged_df
 
 
-
 def display_comparison(df):
     RED = '\033[91m'
     GREEN = '\033[92m'
     ORANGE = '\033[93m'
     RESET = '\033[0m'
-    result = df.groupby("benchmark_name_new")["comparison"].unique()
+    result = df.groupby("benchmark_name_new").agg({
+        'comparison': 'first',  # Prend la première valeur de comparison
+        'relative_min': 'first',         # Suppose que 'min' existe dans le df
+        'relative_max': 'first',         # Suppose que 'max' existe dans le df
+        'relative_deviation': 'first'          # Suppose que 'std' existe dans le df
+    })
+    
 
-    for index, values in result.items():
-        comparison = values[0]
+    for index, row in result.iterrows():
+        comparison = row["comparison"]
+        rmin = row["relative_min"]
+        rmax = row["relative_max"]
+        rdeviation = row["relative_deviation"]
         if comparison == 'inferior':
             color = RED
         elif comparison == 'superior':
@@ -107,7 +115,9 @@ def display_comparison(df):
             color = ORANGE
         else:
             color = RESET
-        print(f"{color}{index:<60} [{comparison}]{RESET}")        
+        print(f"{color}{index:<60} [{comparison}] "
+              f"min: {rmin:.4f} max: {rmax:.4f} std: {rdeviation:.4f}{RESET}")
+
 
         
 def display_bar(df):
@@ -172,7 +182,6 @@ def print_all_plots(df):
         display_plot_terminal(df, benchmark)
 
 
-
 def mode(m):
     if (m == "comparison"):
         print("Select mode comparison")
@@ -190,21 +199,12 @@ def main():
     df1 = read_benchmark(filename1)
     df2 = read_benchmark(filename2)
 
-
-
     comparison_df = compare_benchmarks(df1, df2)
-
     display_comparison(comparison_df)
-
-
     display_bar(comparison_df)
 
-
     display_plot_terminal(comparison_df, "BLAS1_op_raw<float, std::plus< float>>")
-
     get_2D_benchmarks(comparison_df)
-
-
     print_all_plots(comparison_df)
 
 if __name__ == "__main__":
