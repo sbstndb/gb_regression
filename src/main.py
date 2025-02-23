@@ -77,6 +77,10 @@ def categorize(merged_df, threshold):
     merged_df["relative_min"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("min")
     merged_df["relative_max"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("max")
     merged_df["relative_deviation"] = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("std")
+    merged_df["count_same_benchmark"] = merged_df.groupby("benchmark_name_new")["benchmark_name_new"].transform("count")
+    print(merged_df["count_same_benchmark"])
+
+
 
     merged_df["comparison"] = merged_df["relative_mean"].apply(categorize)
 
@@ -98,7 +102,8 @@ def display_comparison(df):
         'comparison': 'first',  # Prend la première valeur de comparison
         'relative_min': 'first',         # Suppose que 'min' existe dans le df
         'relative_max': 'first',         # Suppose que 'max' existe dans le df
-        'relative_deviation': 'first'          # Suppose que 'std' existe dans le df
+        'relative_deviation': 'first',          # Suppose que 'std' existe dans le df
+        'count_same_benchmark': 'first'
     })
     
 
@@ -107,6 +112,7 @@ def display_comparison(df):
         rmin = row["relative_min"]
         rmax = row["relative_max"]
         rdeviation = row["relative_deviation"]
+        count = row["count_same_benchmark"]
         if comparison == 'inferior':
             color = RED
         elif comparison == 'superior':
@@ -116,7 +122,7 @@ def display_comparison(df):
         else:
             color = RESET
         print(f"{color}{index:<60} [{comparison}] "
-              f"min: {rmin:.4f} max: {rmax:.4f} std: {rdeviation:.4f}{RESET}")
+              f"min: {rmin:.4f} max: {rmax:.4f} std: {rdeviation:.4f} count: {count} {RESET}")
 
 
         
