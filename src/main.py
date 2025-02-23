@@ -45,15 +45,26 @@ def extract_size(df):
     df["size"] = df["name"].str.extract(size_pattern).astype(float).astype(int)
     df["benchmark_name"] = df["name"].str.replace(size_pattern, '', regex=True)
 
+def read_benchmark(filename):
+    json_data = load_json(filename)
+    df = parse_benchmark(json_data)
+    return df
 
-def display_results(results):
-    print(results)
 
-def compare_benchmarks(df1, df2, threshold=0.05):
+def merge_benchmarks(df1,df2):
     merged_df = df1.merge(df2, on="name", suffixes=("_old", "_new"))
-    merged_df["absolute_difference"] = merged_df['cpu_time_new'] - merged_df['cpu_time_old']
+    return merged_df
+
+def compare_time(merged_df):
+    merged_df["absolute_difference"] = merged_df["cpu_time_new"] - merged_df["cpu_time_old"]
     merged_df["relative_difference"] = merged_df["absolute_difference"] / merged_df["cpu_time_old"]
 
+
+def categorize_dimension(merged_df):
+    merged_df['dimension'] = merged_df.groupby('benchmark_name_new')['benchmark_name_new'].transform('count').gt(1).astype(int)
+
+
+def categorize(merged_df, threshold):
     def categorize(diff):
         if diff < -threshold :
             return "superior"
@@ -61,17 +72,17 @@ def compare_benchmarks(df1, df2, threshold=0.05):
             return "inferior"
         else:
             return "equal"
+    
+    avg_diff = merged_df.groupby("benchmark_name_new")["relative_difference"].transform("mean")
+    merged_df["comparison"] = avg_diff.apply(categorize)
 
-    merged_df["comparison"] = merged_df["relative_difference"].apply(categorize)
+
+def compare_benchmarks(df1, df2, threshold=0.05):
+    merged_df = merge_benchmarks(df1, df2)
+    compare_time(merged_df)
+    categorize_dimension(merged_df)
+    categorize(merged_df, threshold)
     return merged_df
-
-
-
-def mean_2D(df, benchmark_name):
-    result = df[df["benchmark_name_new"] == benchmark_name]
-    difference = (result["cpu_time_old"]-result["cpu_time_new"])/result["cpu_time_old"]
-    mean = np.mean(difference)
-    return mean
 
 
 
@@ -90,7 +101,8 @@ def display_inferior(df):
         
 def display_bar(df):
     fig = tpl.figure()
-    summary = df["comparison"].value_counts().to_dict()
+    df_unique = df.drop_duplicates(subset=["benchmark_name_new"])
+    summary = df_unique["comparison"].value_counts().to_dict()
     fig.barh(list(summary.values()), list(summary.keys()))
     fig.show()
 
@@ -146,8 +158,6 @@ def print_all_plots(df):
     above_threshold = get_2D_benchmarks(df, 2)
     for benchmark in above_threshold : 
 
-        mean = mean_2D(df, benchmark)
-        print(f"Average gain : {mean:.3f}")
         display_plot_terminal(df, benchmark)
 
 
@@ -157,14 +167,6 @@ def mode(m):
         print("Select mode comparison")
     elif (m == "show"):
         print("Select mode Show")
-
-
-
-def read_benchmark(filename):
-    json_data = load_json(filename)
-    df = parse_benchmark(json_data)
-    return df
-
 
 
 def main():
@@ -177,12 +179,8 @@ def main():
     df1 = read_benchmark(filename1)
     df2 = read_benchmark(filename2)
 
-#    extract_size(df1)
 #    display_comparison(comparison_df)
-#    extract_size(df2)
 
-#    display_results(df1)
-#    display_results(df2)
 
     comparison_df = compare_benchmarks(df1, df2)
 
