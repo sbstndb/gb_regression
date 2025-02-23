@@ -245,7 +245,7 @@ def main():
     display_comparison(comparison_df)
 #    display_bar(comparison_df)
 
-    print_all_plots(comparison_df)
+#    print_all_plots(comparison_df)
 
 if __name__ == "__main__":
     main()
