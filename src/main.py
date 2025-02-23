@@ -191,19 +191,15 @@ def display_plot_terminal(comparison_df, name):
 
 def display_bar_terminal(comparison_df, name):
     result = comparison_df[comparison_df["benchmark_name_new"] == name]
-#    print("result : " , result)
-#    print("cpu_time_old : ", result["cpu_time_old"])
-#
-#    print("cpu_time_old size : ", result["cpu_time_old"].size)
-
-
     print(f"\033[1;4mTestcase : {name}\033[0m")        
+
     plt2.clf()
-#    print("timeold : ", result["cpu_time_old"])
-#    print("timenew : ", result["cpu_time_new"])
     time_result = [result["cpu_time_old"].iloc[0], result["cpu_time_new"].iloc[0]]
-    plt2.bar(time_result) 
-    plt2.plotsize(plt2.tw()//4, plt2.th()//4)
+    name_result = ['old', 'new']
+    plt2.bar(name_result, time_result)
+    plt2.ylabel("Time")
+    plt2.plotsize(plt2.tw()//8, plt2.th()//4)
+    plt2.theme("pro")
     plt2.show()
 
 
@@ -213,8 +209,6 @@ def get_2D_benchmarks(df, threshold=2):
     counts = df["benchmark_name_old"].value_counts()
     above_threshold = counts[counts > threshold].index.tolist()
     below_threshold = counts[counts <= threshold].index.tolist()    
-    print(f"Benchmarks avec moins de {threshold} occurrences : {below_threshold}")
-
     return above_threshold, below_threshold
 
 
@@ -248,8 +242,6 @@ def main():
     display_comparison(comparison_df)
     display_bar(comparison_df)
 
-#    display_plot_terminal(comparison_df, "BLAS1_op_raw<float, std::plus< float>>")
-#    get_2D_benchmarks(comparison_df)
     print_all_plots(comparison_df)
 
 if __name__ == "__main__":
