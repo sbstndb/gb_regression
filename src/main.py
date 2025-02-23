@@ -105,6 +105,7 @@ def display_comparison(df):
         'relative_min': 'first',         # Suppose que 'min' existe dans le df
         'relative_max': 'first',         # Suppose que 'max' existe dans le df
         'relative_deviation': 'first',          # Suppose que 'std' existe dans le df
+        'relative_mean': 'first',        
         'count_same_benchmark': 'first',
         'size_min': 'first',        
         'size_max': 'first',
@@ -126,6 +127,8 @@ def display_comparison(df):
         cpu_time_old = row["cpu_time_old"]
         cpu_time_new = row["cpu_time_new"]
         relative_difference = row["relative_difference"]        
+        relative_mean = row["relative_mean"]
+        
         if comparison == 'inferior':
             color = RED
         elif comparison == 'superior':
@@ -137,10 +140,10 @@ def display_comparison(df):
 
         if (count == 1):
             print(f"{color}{index:<60} [{comparison}] "
-                  f"cpu_time reference: {cpu_time_old:.4f} cpu_time: {cpu_time_new:.4f} relative difference: {relative_difference:.4f}{RESET}")
+                  f"relative diff: {100*relative_difference:.2f}% cpu_time reference: {cpu_time_old:.2f} cpu_time: {cpu_time_new:.2f}{RESET}")
         else:
             print(f"{color}{index:<60} [{comparison}] "
-              f"rel_min: {rmin:.4f} rel_max: {rmax:.4f} std: {rdeviation:.4f} count: {count} size: {size_min}-{size_max}{RESET}")
+                  f"relative diff: {100*relative_mean:.2f}% rel_min: {100*rmin:.1f}% rel_max: {100*rmax:.1f}% std: {rdeviation:.2f} count: {count} size: {size_min}-{size_max}{RESET}")
 
 
         
@@ -240,9 +243,9 @@ def main():
 
     comparison_df = compare_benchmarks(df1, df2)
     display_comparison(comparison_df)
-    display_bar(comparison_df)
+#    display_bar(comparison_df)
 
-    print_all_plots(comparison_df)
+#    print_all_plots(comparison_df)
 
 if __name__ == "__main__":
     main()
